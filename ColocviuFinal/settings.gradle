@@ -1,0 +1,2 @@
+rootProject.name='ColocviuFinal'
+include ':app', ':jsoup-1.8.2', ':httpclient-4.4.1.2'
