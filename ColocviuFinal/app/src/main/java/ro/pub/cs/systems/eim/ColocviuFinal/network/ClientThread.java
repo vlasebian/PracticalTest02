@@ -21,6 +21,7 @@ public class ClientThread extends Thread {
     private TextView resultTextView;
 
     private String currency;
+    private String requestType;
 
     public ClientThread(String address, int port, TextView resultTextView, String ...otherInfo) {
         this.address = address;
@@ -29,6 +30,7 @@ public class ClientThread extends Thread {
         this.resultTextView = resultTextView;
 
         currency = otherInfo[0];
+        requestType = otherInfo[1];
     }
 
     @Override
@@ -51,8 +53,15 @@ public class ClientThread extends Thread {
             /* send search parameters to CommunicationThread */
             printWriter.println(currency);
             printWriter.flush();
+            printWriter.println(requestType);
+            printWriter.flush();
 
             Log.i(TAG, "[CLIENT THREAD] Waiting for response");
+
+            if (requestType == Constants.UPDATE) {
+                /* do not update the ui */
+                return;
+            }
 
             /* wait for results to be sent */
             String information;
@@ -63,9 +72,7 @@ public class ClientThread extends Thread {
                 resultTextView.post(new Runnable() {
                     @Override
                     public void run() {
-//                        resultTextView.setText(resultTextView.getText().toString()
-//                                + finalizedWeateherInformation);
-                        resultTextView.append(finalizedWeateherInformation + "\n");
+                        resultTextView.setText(finalizedWeateherInformation);
                     }
                 });
             }

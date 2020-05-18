@@ -2,33 +2,20 @@ package ro.pub.cs.systems.eim.ColocviuFinal.network;
 
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
-import cz.msebera.android.httpclient.NameValuePair;
 import cz.msebera.android.httpclient.client.HttpClient;
-import cz.msebera.android.httpclient.client.ResponseHandler;
-import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
-import cz.msebera.android.httpclient.client.methods.HttpPost;
-import cz.msebera.android.httpclient.impl.client.BasicResponseHandler;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
-import cz.msebera.android.httpclient.message.BasicNameValuePair;
-import cz.msebera.android.httpclient.protocol.HTTP;
 import cz.msebera.android.httpclient.util.EntityUtils;
 
 import ro.pub.cs.systems.eim.ColocviuFinal.general.Constants;
@@ -69,6 +56,7 @@ public class CommunicationThread extends Thread {
 
             Log.i(TAG, "[COMMUNICATION THREAD] Waiting for parameters from client");
             String currency = bufferedReader.readLine();
+            String request  = bufferedReader.readLine();
 
             if (currency == null || currency.isEmpty()) {
                 Log.e(TAG, "[COMMUNICATION THREAD] Error receiving parameters from client");
@@ -79,9 +67,9 @@ public class CommunicationThread extends Thread {
             HashMap<String, DataModel> data = serverThread.getData();
             DataModel dataModel = null;
 
-            if (data.containsKey(currency)) {
+            if (request == Constants.UI_REQUEST && data.containsKey(currency)) {
 
-                Log.i(TAG, "[COMMUNICATION THREAD] Getting the information from the cache...");
+                Log.e(TAG, "[COMMUNICATION THREAD] Getting the information from the cache...");
                 dataModel = data.get(currency);
 
             } else {
@@ -91,21 +79,7 @@ public class CommunicationThread extends Thread {
 
                 switch (requestType) {
                     case POST_REQUEST:
-//                        HttpPost httpPost = new HttpPost(Constants.WEB_SERVICE_ADDRESS);
-//
-//                        /* create request body */
-//                        List<NameValuePair> params = new ArrayList<>();
-//                        params.add(new BasicNameValuePair("firstKey", firstKey));
-//
-//                        /* set request body data type and add it to the request */
-//                        UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(params, HTTP.UTF_8);
-//                        httpPost.setEntity(urlEncodedFormEntity);
-//
-//                        /* make request and wait for response */
-//                        ResponseHandler<String> responseHandler = new BasicResponseHandler();
-//                        pageSourceCode = httpClient.execute(httpPost, responseHandler);
-//
-//                        break;
+                        break;
                     case GET_REQUEST:
                         HttpGet httpGet = new HttpGet(Constants.WEB_SERVICE_ADDRESS + currency +
                                                                         Constants.WEB_SERVICE_MODE);
@@ -128,32 +102,6 @@ public class CommunicationThread extends Thread {
 
                 switch (requestType) {
                     case POST_REQUEST:
-                        /*
-                        Document document = Jsoup.parse(pageSourceCode);
-                        Element element = document.child(0);
-
-                        Elements elements = element.getElementsByTag(Constants.SCRIPT_TAG);
-                        for (Element script : elements) {
-                            String scriptData = script.data();
-                            if (scriptData.contains(Constants.SEARCH_KEY)) {
-                                int position = scriptData.indexOf(Constants.SEARCH_KEY) + Constants.SEARCH_KEY.length();
-                                scriptData = scriptData.substring(position);
-                                JSONObject content = new JSONObject(scriptData);
-                                JSONObject currentObservation = content.getJSONObject(Constants.CURRENT_OBSERVATION);
-                                String temperature = currentObservation.getString(Constants.TEMPERATURE);
-                                String windSpeed = currentObservation.getString(Constants.WIND_SPEED);
-                                String condition = currentObservation.getString(Constants.CONDITION);
-                                String pressure = currentObservation.getString(Constants.PRESSURE);
-                                String humidity = currentObservation.getString(Constants.HUMIDITY);
-                                weatherForecastInformation = new WeatherForecastInformation(
-                                        temperature, windSpeed, condition, pressure, humidity
-                                );
-                                serverThread.setData(city, weatherForecastInformation);
-                                break;
-                            }
-                        }
-                        */
-
                         break;
                     case GET_REQUEST:
 
@@ -166,6 +114,7 @@ public class CommunicationThread extends Thread {
                         String rate = curr.getString("rate");
 
                         dataModel = new DataModel(rate, updateTimestamp);
+
                         data.put(currency, dataModel);
                         serverThread.setData(data);
 

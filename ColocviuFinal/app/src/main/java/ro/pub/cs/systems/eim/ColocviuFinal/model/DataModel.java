@@ -11,7 +11,6 @@ public class DataModel {
 
     @Override
     public String toString() {
-        return "Rate: " + rate + "\n" +
-                "Updated at: " + updated + "\n";
+        return "Rate: " + rate + ", updated at: " + updated;
     }
 }

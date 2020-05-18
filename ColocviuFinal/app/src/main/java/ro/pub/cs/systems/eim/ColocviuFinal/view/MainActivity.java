@@ -3,12 +3,15 @@ package ro.pub.cs.systems.eim.ColocviuFinal.view;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.concurrent.TimeUnit;
 
 import ro.pub.cs.systems.eim.ColocviuFinal.R;
 import ro.pub.cs.systems.eim.ColocviuFinal.general.Constants;
@@ -26,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText currencyEditText;
     private Button   makeRequestButton;
     private TextView resultTextView;
+
+    private Handler updateHandler;
 
     private StartServerButtonClickListener startServerButtonClickListener = new StartServerButtonClickListener();
     private class StartServerButtonClickListener implements Button.OnClickListener {
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             serverThread.start();
+            startRepeatingTask();
         }
     }
 
@@ -69,9 +75,39 @@ public class MainActivity extends AppCompatActivity {
             String currency = currencyEditText.getText().toString().toUpperCase();
             resultTextView.setText("");
 
-            clientThread = new ClientThread("localhost", port, resultTextView, currency);
+            clientThread = new ClientThread("localhost", port, resultTextView, currency, Constants.UI_REQUEST);
             clientThread.start();
         }
+    }
+
+    private void updateStatus() {
+        if (clientThread != null) {
+            clientThread = new ClientThread("localhost", port, resultTextView, "USD", Constants.UPDATE);
+            clientThread.start();
+
+            clientThread = new ClientThread("localhost", port, resultTextView, "EUR", Constants.UPDATE);
+            clientThread.start();
+        }
+    }
+
+    private Runnable currencyUpdater = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Log.i(Constants.TAG, "[MAIN ACTIVITY] Currency updater triggered!");
+                updateStatus(); //this function can change value of mInterval.
+            } finally {
+                updateHandler.postDelayed(currencyUpdater, 60000);
+            }
+        }
+    };
+
+    void startRepeatingTask() {
+        currencyUpdater.run();
+    }
+
+    void stopRepeatingTask() {
+        updateHandler.removeCallbacks(currencyUpdater);
     }
 
     @Override
@@ -88,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
         startServerButton.setOnClickListener(startServerButtonClickListener);
         makeRequestButton.setOnClickListener(makeRequestButtonClickListener);
+
+        updateHandler = new Handler();
     }
 
 
@@ -97,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         if (serverThread != null) {
             serverThread.stopThread();
         }
+        stopRepeatingTask();
         super.onDestroy();
     }
 }

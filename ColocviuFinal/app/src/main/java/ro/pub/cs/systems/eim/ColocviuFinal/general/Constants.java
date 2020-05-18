@@ -9,4 +9,7 @@ public class Constants {
 
     final public static String GET_REQUEST = "GET";
     final public static String POST_REQUEST = "POST";
+
+    final public static String UPDATE = "update";
+    final public static String UI_REQUEST = "ui_request";
 }
