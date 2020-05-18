@@ -68,15 +68,9 @@ public class CommunicationThread extends Thread {
             }
 
             Log.i(TAG, "[COMMUNICATION THREAD] Waiting for parameters from client");
-            String firstKey = bufferedReader.readLine();
-            /*
-            String secondKey = bufferedReader.readLine();
-            if (firstKey == null || firstKey.isEmpty() || secondKey == null || secondKey.isEmpty()) {
-                Log.e(Constants.TAG, "[COMMUNICATION THREAD] Error receiving parameters from client");
-                return;
-            }
-            */
-            if (firstKey == null || firstKey.isEmpty()) {
+            String currency = bufferedReader.readLine();
+
+            if (currency == null || currency.isEmpty()) {
                 Log.e(TAG, "[COMMUNICATION THREAD] Error receiving parameters from client");
                 return;
             }
@@ -85,10 +79,10 @@ public class CommunicationThread extends Thread {
             HashMap<String, DataModel> data = serverThread.getData();
             DataModel dataModel = null;
 
-            if (data.containsKey(firstKey)) {
+            if (data.containsKey(currency)) {
 
                 Log.i(TAG, "[COMMUNICATION THREAD] Getting the information from the cache...");
-                dataModel = data.get(firstKey);
+                dataModel = data.get(currency);
 
             } else {
                 Log.i(TAG, "[COMMUNICATION THREAD] Getting the information from the web service...");
@@ -97,23 +91,24 @@ public class CommunicationThread extends Thread {
 
                 switch (requestType) {
                     case POST_REQUEST:
-                        HttpPost httpPost = new HttpPost(Constants.WEB_SERVICE_ADDRESS);
-
-                        /* create request body */
-                        List<NameValuePair> params = new ArrayList<>();
-                        params.add(new BasicNameValuePair("firstKey", firstKey));
-
-                        /* set request body data type and add it to the request */
-                        UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(params, HTTP.UTF_8);
-                        httpPost.setEntity(urlEncodedFormEntity);
-
-                        /* make request and wait for response */
-                        ResponseHandler<String> responseHandler = new BasicResponseHandler();
-                        pageSourceCode = httpClient.execute(httpPost, responseHandler);
-
-                        break;
+//                        HttpPost httpPost = new HttpPost(Constants.WEB_SERVICE_ADDRESS);
+//
+//                        /* create request body */
+//                        List<NameValuePair> params = new ArrayList<>();
+//                        params.add(new BasicNameValuePair("firstKey", firstKey));
+//
+//                        /* set request body data type and add it to the request */
+//                        UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(params, HTTP.UTF_8);
+//                        httpPost.setEntity(urlEncodedFormEntity);
+//
+//                        /* make request and wait for response */
+//                        ResponseHandler<String> responseHandler = new BasicResponseHandler();
+//                        pageSourceCode = httpClient.execute(httpPost, responseHandler);
+//
+//                        break;
                     case GET_REQUEST:
-                        HttpGet httpGet = new HttpGet(Constants.WEB_SERVICE_ADDRESS + firstKey);
+                        HttpGet httpGet = new HttpGet(Constants.WEB_SERVICE_ADDRESS + currency +
+                                                                        Constants.WEB_SERVICE_MODE);
 
                         HttpResponse httpGetResponse = httpClient.execute(httpGet);
                         HttpEntity httpGetEntity = httpGetResponse.getEntity();
@@ -133,10 +128,10 @@ public class CommunicationThread extends Thread {
 
                 switch (requestType) {
                     case POST_REQUEST:
+                        /*
                         Document document = Jsoup.parse(pageSourceCode);
                         Element element = document.child(0);
 
-                        /*
                         Elements elements = element.getElementsByTag(Constants.SCRIPT_TAG);
                         for (Element script : elements) {
                             String scriptData = script.data();
@@ -163,45 +158,16 @@ public class CommunicationThread extends Thread {
                     case GET_REQUEST:
 
                         JSONObject content = new JSONObject(pageSourceCode);
-                        String country = content.getString("name");
-                        String countryCode = content.getString("alpha2");
-                        String continent = content.getString("continent");
+                        JSONObject time    = content.getJSONObject("time");
+                        JSONObject bpi     = content.getJSONObject("bpi");
+                        JSONObject curr    = bpi.getJSONObject(currency);
 
-                        JSONObject geo = content.getJSONObject("geo");
+                        String updateTimestamp = time.getString("updated");
+                        String rate = curr.getString("rate");
 
-                        Double latitude = geo.getDouble("latitude");
-                        Double longitude = geo.getDouble("longitude");
-
-                        dataModel = new DataModel(country, countryCode, continent, latitude, longitude);
-                        data.put(firstKey, dataModel);
+                        dataModel = new DataModel(rate, updateTimestamp);
+                        data.put(currency, dataModel);
                         serverThread.setData(data);
-
-                        /*
-                        JSONArray weatherArray = content.getJSONArray(Constants.WEATHER);
-                        JSONObject weather;
-                        String condition = "";
-                        for (int i = 0; i < weatherArray.length(); i++) {
-                            weather = weatherArray.getJSONObject(i);
-                            condition += weather.getString(Constants.MAIN) + " : " + weather.getString(Constants.DESCRIPTION);
-
-                            if (i < weatherArray.length() - 1) {
-                                condition += ";";
-                            }
-                        }
-
-                        JSONObject main = content.getJSONObject(Constants.MAIN);
-                        String temperature = main.getString(Constants.TEMP);
-                        String pressure = main.getString(Constants.PRESSURE);
-                        String humidity = main.getString(Constants.HUMIDITY);
-
-                        JSONObject wind = content.getJSONObject(Constants.WIND);
-                        String windSpeed = wind.getString(Constants.SPEED);
-
-                        weatherForecastInformation = new WeatherForecastInformation(
-                                temperature, windSpeed, condition, pressure, humidity
-                        );
-                        serverThread.setData(city, weatherForecastInformation);
-                        */
 
                         break;
                 }
@@ -216,31 +182,6 @@ public class CommunicationThread extends Thread {
 
             /* update UI: create result string and send it to the socket */
             String result = dataModel.toString();
-
-            /*
-            switch(informationType) {
-                case Constants.ALL:
-                    result = weatherForecastInformation.toString();
-                    break;
-                case Constants.TEMPERATURE:
-                    result = weatherForecastInformation.getTemperature();
-                    break;
-                case Constants.WIND_SPEED:
-                    result = weatherForecastInformation.getWindSpeed();
-                    break;
-                case Constants.CONDITION:
-                    result = weatherForecastInformation.getCondition();
-                    break;
-                case Constants.HUMIDITY:
-                    result = weatherForecastInformation.getHumidity();
-                    break;
-                case Constants.PRESSURE:
-                    result = weatherForecastInformation.getPressure();
-                    break;
-                default:
-                    result = "[COMMUNICATION THREAD] Wrong information type (all / temperature / wind_speed / condition / humidity / pressure)!";
-            }
-        */
 
             printWriter.println(result);
             printWriter.flush();

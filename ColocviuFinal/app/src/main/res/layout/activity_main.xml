@@ -22,7 +22,7 @@
             android:inputType="textPersonName" />
 
         <Button
-            android:id="@+id/getDataButton"
+            android:id="@+id/startServerButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Start Server" />
@@ -37,7 +37,7 @@
             android:inputType="textPersonName" />
 
         <Button
-            android:id="@+id/currencyButton"
+            android:id="@+id/makeRequestButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Make request" />

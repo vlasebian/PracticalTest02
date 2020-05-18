@@ -19,28 +19,57 @@ public class MainActivity extends AppCompatActivity {
     private ServerThread serverThread;
     private ClientThread clientThread;
 
-    private EditText ipEditText;
-    private Button getDataButton;
+    private Integer  port;
+
+    private EditText portEditText;
+    private Button   startServerButton;
+    private EditText currencyEditText;
+    private Button   makeRequestButton;
     private TextView resultTextView;
 
-    private ButtonClickListener getDataButtonListener = new ButtonClickListener();
-    private class ButtonClickListener implements Button.OnClickListener {
+    private StartServerButtonClickListener startServerButtonClickListener = new StartServerButtonClickListener();
+    private class StartServerButtonClickListener implements Button.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            if (portEditText.getText().toString().isEmpty()) {
+                Log.e(Constants.TAG, "[MAIN ACTIVITY] Port was not specified!");
+                Toast.makeText(getApplicationContext(), "[MAIN ACTIVITY] Port was not specified!!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            port = Integer.parseInt(portEditText.getText().toString());
+
+            /* start server thread */
+            serverThread = new ServerThread(port);
+            if (serverThread.getServerSocket() == null) {
+                Log.e(Constants.TAG, "[MAIN ACTIVITY] Could not create server thread!");
+                Toast.makeText(getApplicationContext(), "[MAIN ACTIVITY] Could not create server thread!!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            serverThread.start();
+        }
+    }
+
+    private MakeRequestButtonClickListener makeRequestButtonClickListener = new MakeRequestButtonClickListener();
+    private class MakeRequestButtonClickListener implements Button.OnClickListener {
 
         @Override
         public void onClick(View v) {
-            String address = null;
-
-            if (ipEditText.getText() != null) {
-                address = ipEditText.getText().toString();
-            }
-
             if (serverThread == null || !serverThread.isAlive()) {
                 Toast.makeText(getApplicationContext(), "[MAIN ACTIVITY] There is no server to connect to!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            if (currencyEditText.getText().toString().isEmpty()) {
+                Log.e(Constants.TAG, "[MAIN ACTIVITY] Currency was not specified!");
+                Toast.makeText(getApplicationContext(), "[MAIN ACTIVITY] Currency was not specified!!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String currency = currencyEditText.getText().toString().toUpperCase();
             resultTextView.setText("");
-            clientThread = new ClientThread("localhost", 1234, resultTextView, address);
+
+            clientThread = new ClientThread("localhost", port, resultTextView, currency);
             clientThread.start();
         }
     }
@@ -51,21 +80,14 @@ public class MainActivity extends AppCompatActivity {
         Log.i(Constants.TAG, "[MAIN ACTIVITY] onCreate() callback method has been invoked");
         setContentView(R.layout.activity_main);
 
-        /* TODO */
+        portEditText      = findViewById(R.id.portEditText);
+        startServerButton = findViewById(R.id.startServerButton);
+        currencyEditText  = findViewById(R.id.currencyEditText);
+        makeRequestButton = findViewById(R.id.makeRequestButton);
+        resultTextView    = findViewById(R.id.dataTextView);
 
-        ipEditText = findViewById(R.id.portEditText);
-        getDataButton = findViewById(R.id.getDataButton);
-        resultTextView = findViewById(R.id.dataTextView);
-
-        getDataButton.setOnClickListener(getDataButtonListener);
-
-        /* start server thread */
-        serverThread = new ServerThread(1234);
-        if (serverThread.getServerSocket() == null) {
-            Log.e(Constants.TAG, "[MAIN ACTIVITY] Could not create server thread!");
-            return;
-        }
-        serverThread.start();
+        startServerButton.setOnClickListener(startServerButtonClickListener);
+        makeRequestButton.setOnClickListener(makeRequestButtonClickListener);
     }
 
 

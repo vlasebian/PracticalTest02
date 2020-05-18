@@ -20,8 +20,7 @@ public class ClientThread extends Thread {
     private Socket socket;
     private TextView resultTextView;
 
-    private String firstKey;
-    private String secondKey;
+    private String currency;
 
     public ClientThread(String address, int port, TextView resultTextView, String ...otherInfo) {
         this.address = address;
@@ -29,9 +28,7 @@ public class ClientThread extends Thread {
 
         this.resultTextView = resultTextView;
 
-        /* firstKey is IP in this case */
-        firstKey = otherInfo[0];
-        ///secondKey = otherInfo[1];
+        currency = otherInfo[0];
     }
 
     @Override
@@ -52,11 +49,9 @@ public class ClientThread extends Thread {
             }
 
             /* send search parameters to CommunicationThread */
-            printWriter.println(firstKey);
+            printWriter.println(currency);
             printWriter.flush();
 
-//            printWriter.println(secondKey);
-//            printWriter.flush();
             Log.i(TAG, "[CLIENT THREAD] Waiting for response");
 
             /* wait for results to be sent */
